@@ -1,0 +1,167 @@
+[tasks."coin:init:USDI"]
+script = '''
+MOD_ADDRESS=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+COIN_TYPE=${MOD_ADDRESS}::coin_list::USDI
+
+NAME=USDI
+SYMBOL=USDI
+DECIMALS=6
+MONITOR_SUPPLY=true
+
+aptos move run \
+  --function-id 0x1::managed_coin::initialize \
+  --type-args ${COIN_TYPE} \
+  --args string:${NAME} string:${SYMBOL} u8:${DECIMALS} bool:${MONITOR_SUPPLY}
+'''
+
+[tasks."coin:init:cUSDI"]
+script = '''
+MOD_ADDRESS=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+COIN_TYPE=${MOD_ADDRESS}::coin_list::CUSDI
+
+NAME=cUSDI
+SYMBOL=cUSDI
+DECIMALS=6
+MONITOR_SUPPLY=true
+
+aptos move run \
+  --function-id 0x1::managed_coin::initialize \
+  --type-args ${COIN_TYPE} \
+  --args string:${NAME} string:${SYMBOL} u8:${DECIMALS} bool:${MONITOR_SUPPLY}
+'''
+
+[tasks."coin:init:RED"]
+script = '''
+MOD_ADDRESS=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+COIN_TYPE=${MOD_ADDRESS}::coin_list::RED
+
+NAME=RED
+SYMBOL=RED
+DECIMALS=6
+MONITOR_SUPPLY=true
+
+aptos move run \
+  --function-id 0x1::managed_coin::initialize \
+  --type-args ${COIN_TYPE} \
+  --args string:${NAME} string:${SYMBOL} u8:${DECIMALS} bool:${MONITOR_SUPPLY}
+'''
+
+[tasks."coin:init:BLUE"]
+script = '''
+MOD_ADDRESS=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+COIN_TYPE=${MOD_ADDRESS}::coin_list::BLUE
+
+NAME=BLUE
+SYMBOL=BLUE
+DECIMALS=9
+MONITOR_SUPPLY=true
+
+aptos move run \
+  --function-id 0x1::managed_coin::initialize \
+  --type-args ${COIN_TYPE} \
+  --args string:${NAME} string:${SYMBOL} u8:${DECIMALS} bool:${MONITOR_SUPPLY}
+'''
+
+[tasks."coin:register:RED:2"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+TREASURY=$(cat keys/devnet/keys/treasury/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+TREASURY_PRIVATE=$(cat keys/devnet/keys/treasury/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+
+COIN_X=${umi_pool}::coin_list::RED
+
+aptos move run \
+  --private-key ${TREASURY_PRIVATE} \
+  --function-id 0x1::managed_coin::register \
+  --type-args ${COIN_X}
+'''
+
+[tasks."coin:register:BLUE:2"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+TREASURY=$(cat keys/devnet/keys/treasury/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+TREASURY_PRIVATE=$(cat keys/devnet/keys/treasury/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+
+COIN_X=${umi_pool}::coin_list::BLUE
+
+aptos move run \
+  --private-key ${TREASURY_PRIVATE} \
+  --function-id 0x1::managed_coin::register \
+  --type-args ${COIN_X}
+'''
+
+[tasks."coin:register:RED:alice"]
+script = '''
+ALICE_ADDRESS=$(cat keys/devnet/keys/alice/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+ALICE_PRIVATEKEY=$(cat keys/devnet/keys/alice/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+MOD_ADDRESS=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+
+COIN_TYPE=${MOD_ADDRESS}::coin_list::RED
+
+aptos move run \
+  --private-key ${ALICE_PRIVATEKEY} \
+  --function-id 0x1::managed_coin::register \
+  --type-args ${COIN_TYPE} \
+'''
+
+[tasks."coin:register:BLUE:alice"]
+script = '''
+ALICE_ADDRESS=$(cat keys/devnet/keys/alice/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+ALICE_PRIVATEKEY=$(cat keys/devnet/keys/alice/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+MOD_ADDRESS=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+
+COIN_TYPE=${MOD_ADDRESS}::coin_list::BLUE
+
+aptos move run \
+  --private-key ${ALICE_PRIVATEKEY} \
+  --function-id 0x1::managed_coin::register \
+  --type-args ${COIN_TYPE} \
+'''
+
+[tasks."coin:mint:RED"]
+script = '''
+ALICE_ADDRESS=$(cat keys/devnet/keys/alice/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+MOD_ADDRESS=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+
+COIN_TYPE=${MOD_ADDRESS}::coin_list::RED
+
+aptos move run \
+  --function-id 0x1::managed_coin::mint \
+  --type-args ${MOD_ADDRESS}::coin_list::USDI \
+  --args address:${ALICE_ADDRESS} u64:300
+'''
+
+[tasks."coin:mint:BLUE"]
+script = '''
+ALICE_ADDRESS=$(cat keys/devnet/keys/alice/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+MOD_ADDRESS=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+
+COIN_TYPE=${MOD_ADDRESS}::coin_list::BLUE
+
+aptos move run \
+  --function-id 0x1::managed_coin::mint \
+  --type-args ${COIN_TYPE} \
+  --args address:${ALICE_ADDRESS} u64:300
+'''
+
+[tasks."coin:mint:RED/BLUE:alice"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+ALICE=$(cat keys/devnet/keys/alice/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+
+COIN_X=${umi_pool}::coin_list::RED
+COIN_Y=${umi_pool}::coin_list::BLUE
+
+coin_x_amount=100
+coin_y_amount=200
+
+aptos move run \
+  --function-id 0x1::managed_coin::mint \
+  --type-args ${COIN_X} \
+  --args address:${ALICE} u64:${coin_x_amount}
+
+aptos move run \
+  --function-id 0x1::managed_coin::mint \
+  --type-args ${COIN_Y} \
+  --args address:${ALICE} u64:${coin_y_amount}
+'''

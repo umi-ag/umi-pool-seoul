@@ -1,0 +1,250 @@
+[tasks."admin:renew"]
+script = '''
+rm -rf .aptos/
+aptos init
+cat Move.toml | pq -t json | pq -q 'SELECT package, dependencies' -t toml > temp.toml
+echo [addresses] >> temp.toml
+ADMIN=$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+echo umi_pool = \"${ADMIN}\" >> temp.toml
+mv temp.toml Move.toml
+aptos account fund-with-faucet --account ${ADMIN} --amount 500000
+'''
+
+[tasks."admin:renew:testnet"]
+script = '''
+rm -rf .aptos/
+aptos init
+cat Move.toml | pq -t json | pq -q 'SELECT package, dependencies' -t toml > temp.toml
+echo [addresses] >> temp.toml
+ADMIN=$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+echo umi_pool = \"${ADMIN}\" >> temp.toml
+mv temp.toml Move.toml
+aptos account fund-with-faucet --account ${ADMIN} --amount 500000
+'''
+
+[tasks."admin:faucet"]
+script = '''
+ADMIN=$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+aptos account fund-with-faucet --account ${ADMIN}
+'''
+
+[tasks."admin:register:USDI"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.account | sed -e 's/"//g')
+ADMIN_PRIVATE=$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.private_key | sed -e 's/"//g')
+umi_coins=${umi_pool}::coin_list
+
+COIN_X=${umi_coins}::USDI
+
+aptos move run \
+  --url https://testnet.aptoslabs.com \
+  --private-key ${ADMIN_PRIVATE} \
+  --function-id 0x1::managed_coin::register \
+  --type-args ${COIN_X} \
+'''
+
+[tasks."admin:init_coin:USDI"]
+script = '''
+ADMIN=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.account | sed -e 's/"//g')
+ADMIN_PRIVATE=$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.private_key | sed -e 's/"//g')
+
+UMI_COINS=${ADMIN}::coin_list
+
+COIN_X=${UMI_COINS}::USDI
+
+echo $COIN_X
+
+k=1000
+M=$(($k* $k))
+B=$(($M* $k))
+coin_x_amount=$((1 * $M)) ;: max 1e6
+
+aptos move run \
+  --url https://testnet.aptoslabs.com \
+  --private-key ${ADMIN_PRIVATE} \
+  --function-id ${UMI_COINS}::init_coin \
+  --type-args ${COIN_X} \
+  --args string:bitcoin string:BTC u8:8
+'''
+
+[tasks."admin:init_coin:BTC"]
+script = '''
+ADMIN=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.account | sed -e 's/"//g')
+ADMIN_PRIVATE=$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.private_key | sed -e 's/"//g')
+HIPPO_COINS=0x498d8926f16eb9ca90cab1b3a26aa6f97a080b3fcbe6e83ae150b7243a00fb68::devnet_coins
+UMI_COINS=${ADMIN}::coin_list
+
+COIN_X=${HIPPO_COINS}::DevnetBTC
+echo $COIN_X
+
+k=1000
+M=$(($k* $k))
+B=$(($M* $k))
+coin_x_amount=$((1 * $M)) ;: max 1e6
+
+aptos move run \
+  --url https://testnet.aptoslabs.com \
+  --private-key ${ADMIN_PRIVATE} \
+  --function-id ${UMI_COINS}::init_coin \
+  --type-args ${COIN_X} \
+  --args string:bitcoin string:BTC u8:8
+'''
+
+[tasks."admin:init_pot:BTC"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.account | sed -e 's/"//g')
+ADMIN_PRIVATE=$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.private_key | sed -e 's/"//g')
+HIPPO_COINS=0x498d8926f16eb9ca90cab1b3a26aa6f97a080b3fcbe6e83ae150b7243a00fb68::devnet_coins
+UMI_COINS=${ADMIN}::coin_list
+
+COIN_X=${HIPPO_COINS}::DevnetBTC
+echo $COIN_X
+
+k=1000
+M=$(($k* $k))
+B=$(($M* $k))
+coin_x_amount=$((1 * $M)) ;: max 1e6
+
+aptos move run \
+  --url https://testnet.aptoslabs.com \
+  --private-key ${ADMIN_PRIVATE} \
+  --function-id ${umi_pool}::pool::init_pot \
+  --type-args ${COIN_X}
+
+weight=$((10* $k)) ;: e-6
+min_weight=$((1* $k)) ;: e-6
+fee=$((3* $k)) ;: e-6
+rebate=$((1* $k)) ;: e-6
+
+aptos move run \
+  --url https://testnet.aptoslabs.com \
+  --private-key ${ADMIN_PRIVATE} \
+  --function-id ${umi_pool}::pool::set_config_pot \
+  --type-args ${COIN_X} \
+  --args u64:${weight} u64:${min_weight} u64:${fee} u64:${rebate}
+'''
+
+[tasks."admin:init_pot:ETH"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.account | sed -e 's/"//g')
+ADMIN_PRIVATE=$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.private_key | sed -e 's/"//g')
+
+umi_coins=${umi_pool}::coin_list
+
+COIN_X=${umi_coins}::ETH
+
+k=1000
+M=$(($k* $k))
+B=$(($M* $k))
+coin_x_amount=$((1 * $M)) ;: max 1e6
+
+aptos move run \
+  --url https://testnet.aptoslabs.com \
+  --private-key ${ADMIN_PRIVATE} \
+  --function-id ${umi_pool}::pool::init_pot \
+  --type-args ${COIN_X}
+
+weight=$((10* $k)) ;: e-6
+min_weight=$((1* $k)) ;: e-6
+fee=$((3* $k)) ;: e-6
+rebate=$((1* $k)) ;: e-6
+
+aptos move run \
+  --url https://testnet.aptoslabs.com \
+  --private-key ${ADMIN_PRIVATE} \
+  --function-id ${umi_pool}::pool::set_config_pot \
+  --type-args ${COIN_X} \
+  --args u64:${weight} u64:${min_weight} u64:${fee} u64:${rebate}
+'''
+
+[tasks."admin:init_pot:USDC"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.account | sed -e 's/"//g')
+ADMIN_PRIVATE=$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.private_key | sed -e 's/"//g')
+HIPPO_COINS=0x498d8926f16eb9ca90cab1b3a26aa6f97a080b3fcbe6e83ae150b7243a00fb68::devnet_coins
+UMI_COINS=${ADMIN}::coin_list
+
+COIN_X=${HIPPO_COINS}::DevnetUSDC
+echo $COIN_X
+
+k=1000
+M=$(($k* $k))
+B=$(($M* $k))
+coin_x_amount=$((1 * $M)) ;: max 1e6
+
+aptos move run \
+  --url https://testnet.aptoslabs.com \
+  --private-key ${ADMIN_PRIVATE} \
+  --function-id ${umi_pool}::pool::init_pot \
+  --type-args ${COIN_X}
+
+weight=$((10* $k)) ;: e-6
+min_weight=$((1* $k)) ;: e-6
+fee=$((3* $k)) ;: e-6
+rebate=$((1* $k)) ;: e-6
+
+aptos move run \
+  --url https://testnet.aptoslabs.com \
+  --private-key ${ADMIN_PRIVATE} \
+  --function-id ${umi_pool}::pool::set_config_pot \
+  --type-args ${COIN_X} \
+  --args u64:${weight} u64:${min_weight} u64:${fee} u64:${rebate}
+'''
+
+[tasks."admin:init_coin:RED"]
+script = '''
+ADMIN=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.account | sed -e 's/"//g')
+ADMIN_PRIVATE=$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.private_key | sed -e 's/"//g')
+
+UMI_COINS=${ADMIN}::coin_list
+
+COIN_X=${UMI_COINS}::RED
+
+echo $COIN_X
+
+k=1000
+M=$(($k* $k))
+B=$(($M* $k))
+coin_x_amount=$((1 * $M)) ;: max 1e6
+
+aptos move run \
+  --url https://testnet.aptoslabs.com \
+  --private-key ${ADMIN_PRIVATE} \
+  --function-id ${UMI_COINS}::init_coin \
+  --type-args ${COIN_X} \
+  --args string:bitcoin string:BTC u8:8
+'''
+
+[tasks."admin:init_pot:RED"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.account | sed -e 's/"//g')
+ADMIN_PRIVATE=$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.private_key | sed -e 's/"//g')
+HIPPO_COINS=0x498d8926f16eb9ca90cab1b3a26aa6f97a080b3fcbe6e83ae150b7243a00fb68::devnet_coins
+UMI_COINS=${umi_pool}::coin_list
+
+COIN_X=${UMI_COINS}::RED
+echo $COIN_X
+
+k=1000
+M=$(($k* $k))
+B=$(($M* $k))
+coin_x_amount=$((1 * $M)) ;: max 1e6
+
+aptos move run \
+  --url https://testnet.aptoslabs.com \
+  --private-key ${ADMIN_PRIVATE} \
+  --function-id ${umi_pool}::pool::init_pot \
+  --type-args ${COIN_X}
+
+weight=$((10* $k)) ;: e-6
+min_weight=$((1* $k)) ;: e-6
+fee=$((3* $k)) ;: e-6
+rebate=$((1* $k)) ;: e-6
+
+aptos move run \
+  --url https://testnet.aptoslabs.com \
+  --private-key ${ADMIN_PRIVATE} \
+  --function-id ${umi_pool}::pool::set_config_pot \
+  --type-args ${COIN_X} \
+  --args u64:${weight} u64:${min_weight} u64:${fee} u64:${rebate}
+'''

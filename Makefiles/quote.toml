@@ -1,0 +1,61 @@
+[tasks."quote:register:APT/USDI"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+
+COIN_X=0x1::aptos_coin::AptosCoin
+COIN_Y=${umi_pool}::coin_list::USDI
+echo ${COIN_X}
+echo ${COIN_Y}
+
+aptos move run \
+  --function-id ${umi_pool}::pool::register_price \
+  --type-args ${COIN_X} ${COIN_Y}
+'''
+
+[tasks."quote:set_price:APT/USDI"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+
+COIN_X=0x1::aptos_coin::AptosCoin
+COIN_Y=${umi_pool}::coin_list::USDI
+echo ${COIN_X}
+echo ${COIN_Y}
+
+aptos move run \
+  --function-id ${umi_pool}::pool::set_price \
+  --type-args ${COIN_X} ${COIN_Y} \
+  --args u64:185 u8:6
+'''
+
+[tasks."quote:register:RED/BLUE"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+COIN_X=${umi_pool}::coin_list::RED
+COIN_Y=${umi_pool}::coin_list::BLUE
+
+echo ${COIN_X}
+echo ${COIN_Y}
+aptos move run \
+  --function-id ${umi_pool}::pool::register_price \
+  --type-args ${COIN_X} ${COIN_Y}
+'''
+
+[tasks."quote:set_price:RED/BLUE"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+COIN_X=${umi_pool}::coin_list::RED
+COIN_Y=${umi_pool}::coin_list::BLUE
+
+echo ${COIN_X}
+echo ${COIN_Y}
+aptos move run \
+  --function-id ${umi_pool}::pool::set_price \
+  --type-args ${COIN_X} ${COIN_Y} \
+  --args u64:114514 u8:3
+'''
+
+[tasks."quote:hot"]
+script = '''
+cd scripts/
+pnpm exec vite-node tests/oracle
+'''

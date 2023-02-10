@@ -1,0 +1,30 @@
+[package]
+name = 'umi-pool'
+version = '0.202210.2'
+
+[dependencies.AptosFramework]
+git = 'https://github.com/aptos-labs/aptos-core.git'
+rev = 'devnet'
+subdir = 'aptos-move/framework/aptos-framework/'
+
+[dependencies.MoveStdlib]
+git = 'https://github.com/aptos-labs/aptos-core.git'
+rev = 'devnet'
+subdir = 'aptos-move/framework/move-stdlib'
+
+[dependencies.AptosStdlib]
+git = 'https://github.com/aptos-labs/aptos-core.git'
+rev = 'devnet'
+subdir = 'aptos-move/framework/aptos-stdlib'
+
+[dependencies.AptosToken]
+git = 'https://github.com/aptos-labs/aptos-core.git'
+rev = 'devnet'
+subdir = 'aptos-move/framework/aptos-token'
+
+[dependencies.U256]
+git = 'https://github.com/pontem-network/U256.git'
+rev = 'v0.3.5'
+
+[addresses]
+umi_pool = "dd65b4a704765655e55c6a0229f84014f35a81c6ea4110863ac42ef7c8d76863"

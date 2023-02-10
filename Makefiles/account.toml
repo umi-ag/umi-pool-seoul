@@ -1,0 +1,5 @@
+[tasks."account:faucet:alice"]
+script = '''
+ALICE_ADDRESS=$(cat keys/devnet/keys/alice/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+aptos account fund-with-faucet --account ${ALICE_ADDRESS} --amount 500000
+'''

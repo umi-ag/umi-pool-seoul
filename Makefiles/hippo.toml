@@ -1,0 +1,164 @@
+[tasks."alice:faucet:SOL.h"]
+script = '''
+ALICE=$(cat keys/devnet/keys/alice/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+ALICE_PRIVATEKEY=$(cat keys/devnet/keys/alice/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+
+HIPPO_S=0x498d8926f16eb9ca90cab1b3a26aa6f97a080b3fcbe6e83ae150b7243a00fb68
+COIN_TYPE=${HIPPO_S}::devnet_coins::DevnetSOL
+
+echo ${COIN_TYPE}
+
+aptos move run \
+  --private-key ${ALICE_PRIVATEKEY} \
+  --function-id ${HIPPO_S}::devnet_coins::mint_to_wallet \
+  --type-args ${COIN_TYPE} \
+  --args u64:1000000000
+'''
+
+[tasks."alice:faucet:DAI.h"]
+script = '''
+ALICE=$(cat keys/devnet/keys/alice/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+ALICE_PRIVATEKEY=$(cat keys/devnet/keys/alice/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+
+HIPPO_S=0x498d8926f16eb9ca90cab1b3a26aa6f97a080b3fcbe6e83ae150b7243a00fb68
+COIN_TYPE=${HIPPO_S}::devnet_coins::DevnetDAI
+
+aptos move run \
+  --private-key ${ALICE_PRIVATEKEY} \
+  --function-id ${HIPPO_S}::devnet_coins::mint_to_wallet \
+  --type-args ${COIN_TYPE} \
+  --args u64:1000000000
+'''
+
+[tasks."alice:swap-h:SOL/DAI"]
+script = '''
+ALICE=$(cat keys/devnet/keys/alice/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+ALICE_PRIVATEKEY=$(cat keys/devnet/keys/alice/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+
+HIPPO_S=0x498d8926f16eb9ca90cab1b3a26aa6f97a080b3fcbe6e83ae150b7243a00fb68
+HIPPO_A=0xa61e1e86e9f596e483283727d2739ba24b919012720648c29380f9cd0a96c11a
+
+DEX_HIPPO=1
+DEX_ECONIA=2
+DEX_PONTEM=3
+
+CONSTANT_PRODUCT=1
+STABLE_CURVE=2
+PIECEWISE=3
+
+echo u8:${DEX_HIPPO} \
+    u8:${STABLE_CURVE} \
+    bool:false \
+    u8:${DEX_HIPPO} \
+    u8:${PIECEWISE} \
+    bool:false \
+    u64:1000000000 \
+    u64:0
+
+aptos move run \
+  --private-key ${ALICE_PRIVATEKEY} \
+  --function-id ${HIPPO_A}::aggregator::two_step_route \
+  --type-args \
+    ${HIPPO_S}::devnet_coins::DevnetSOL \
+    ${HIPPO_S}::devnet_coins::DevnetUSDC \
+    ${HIPPO_S}::devnet_coins::DevnetDAI \
+    u8 u8 \
+  --args \
+    u8:${DEX_HIPPO} \
+    u8:${STABLE_CURVE} \
+    bool:false \
+    u8:${DEX_HIPPO} \
+    u8:${PIECEWISE} \
+    bool:false \
+    u64:1000000000 \
+    u64:0
+'''
+
+[tasks."alice:swap-z:SOL/DAI"]
+script = '''
+ALICE=$(cat keys/devnet/keys/alice/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+ALICE_PRIVATE=$(cat keys/devnet/keys/alice/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+
+HIPPO_S=0x498d8926f16eb9ca90cab1b3a26aa6f97a080b3fcbe6e83ae150b7243a00fb68
+UMI_A=0x9f9f9ab6256fd350943c8a56dda25a19195d2bae73258549ed6c25065636e687
+
+DEX_HIPPO=1
+DEX_ECONIA=2
+DEX_PONTEM=3
+
+CONSTANT_PRODUCT=1
+STABLE_CURVE=2
+PIECEWISE=3
+
+echo u8:${DEX_HIPPO} \
+    u8:${STABLE_CURVE} \
+    bool:false \
+    u8:${DEX_HIPPO} \
+    u8:${PIECEWISE} \
+    bool:false \
+    u64:1000000000 \
+    u64:0
+
+aptos move run \
+  --private-key ${ALICE_PRIVATE} \
+  --function-id ${UMI_A}::aggregator::two_step_route \
+  --type-args \
+    ${HIPPO_S}::devnet_coins::DevnetSOL \
+    ${HIPPO_S}::devnet_coins::DevnetUSDC \
+    ${HIPPO_S}::devnet_coins::DevnetDAI \
+    u8 u8 \
+  --args \
+    u8:${DEX_HIPPO} \
+    u8:${STABLE_CURVE} \
+    bool:false \
+    u8:${DEX_HIPPO} \
+    u8:${PIECEWISE} \
+    bool:false \
+    u64:1000000000 \
+    u64:0
+'''
+
+[tasks."alice:swap-u:SOL/DAI"]
+script = '''
+ALICE=$(cat keys/devnet/keys/alice/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+ALICE_PRIVATEKEY=$(cat keys/devnet/keys/alice/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+
+HIPPO_S=0x498d8926f16eb9ca90cab1b3a26aa6f97a080b3fcbe6e83ae150b7243a00fb68
+UMI_A=0xd81db8fbad6078ef85773f533786abe005cbdbee589a01a3c969423618505876
+
+DEX_HIPPO=1
+DEX_ECONIA=2
+DEX_PONTEM=3
+
+CONSTANT_PRODUCT=1
+STABLE_CURVE=2
+PIECEWISE=3
+
+echo u8:${DEX_HIPPO} \
+    u8:${STABLE_CURVE} \
+    bool:false \
+    u8:${DEX_HIPPO} \
+    u8:${PIECEWISE} \
+    bool:false \
+    u64:1000000000 \
+    u64:0
+
+  # --function-id ${UMI_A}::swap::two_step_route \
+aptos move run \
+  --private-key ${ALICE_PRIVATEKEY} \
+  --function-id ${UMI_A}::aggregator::two_step_route \
+  --type-args \
+    ${HIPPO_S}::devnet_coins::DevnetSOL \
+    ${HIPPO_S}::devnet_coins::DevnetUSDC \
+    ${HIPPO_S}::devnet_coins::DevnetDAI \
+    u8 u8 \
+  --args \
+    u8:${DEX_HIPPO} \
+    u8:${STABLE_CURVE} \
+    bool:false \
+    u8:${DEX_HIPPO} \
+    u8:${PIECEWISE} \
+    bool:false \
+    u64:1000000000 \
+    u64:0
+'''

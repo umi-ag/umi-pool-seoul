@@ -1,0 +1,105 @@
+extend = [
+  {path = "Makefiles/account.toml"},
+  {path = "Makefiles/admin.toml"},
+  {path = "Makefiles/coin.toml"},
+  {path = "Makefiles/pool.toml"},
+  {path = "Makefiles/quote.toml"},
+  {path = "Makefiles/alice.toml"},
+  {path = "Makefiles/treasury.toml"},
+  {path = "Makefiles/hippo.toml"},
+]
+
+[tasks."switch:testnet"]
+script = '''
+aptos init --profile testnet-owner \
+  --rest-url https://testnet.aptoslabs.com
+'''
+
+[tasks."coin"]
+script = '''
+cd scripts/
+pnpm exec vite-node tests/coin
+'''
+
+[tasks."hot"]
+script = '''
+MOD_ADDRESS=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+COIN_TYPE=${MOD_ADDRESS}::coin_list::RED
+
+aptos move run \
+  --function-id 0x1::managed_coin::initialize \
+  --type-args ${COIN_TYPE} \
+  --args string:RED string:RED u8:6 bool:true
+'''
+
+[tasks."install:dev"]
+script = '''
+cargo install --git https://github.com/diem/move move-cli --branch main
+cargo install --git https://github.com/diem/move move-analyzer --branch main
+brew install yq jq
+brew install fuyutarow/tap/pq
+'''
+
+[tasks."update:move"]
+script = '''
+cargo install --force --git https://github.com/diem/move move-cli --branch main
+cargo install --force --git https://github.com/diem/move move-analyzer --branch main
+'''
+
+[tasks."update:aptos"]
+script = '''
+cargo install --force --git https://github.com/aptos-labs/aptos-core aptos
+'''
+
+[tasks."install:aptos"]
+script = '''
+rm -rf ~/aptos-core
+git clone https://github.com/aptos-labs/aptos-core.git ~/aptos-core
+cd ~/aptos-core
+./scripts/dev_setup.sh
+source ~/.cargo/env
+'''
+
+[tasks."test:e2e"]
+dependencies = [
+  "test:move",
+  "publish:move",
+  "test:js",
+]
+
+[tasks."test:move"]
+script = '''
+aptos move test
+'''
+
+[tasks."publish:move"]
+script = '''
+aptos move publish
+'''
+
+[tasks."publish:move:testnet"]
+script = '''
+aptos move publish --profile testnet_dev
+'''
+
+[tasks."test:js"]
+script = '''
+cd scripts/
+pnpm exec vite-node tests/hello
+pnpm exec vite-node tests/quote
+'''
+
+[tasks.renew]
+dependencies = [
+  "admin:renew",
+  "treasury:renew",
+]
+
+[tasks."hello-blockchain"]
+dependencies = [
+  "install:dev",
+  "renew",
+  "test:move",
+  "publish:move",
+  "test:js",
+]

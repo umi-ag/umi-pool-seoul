@@ -1,0 +1,205 @@
+[tasks."alice:faucet"]
+script = '''
+ALICE=$(cat keys/devnet/keys/alice/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+aptos account fund-with-faucet --account ${ALICE} --amount 500000
+'''
+
+[tasks."alice:faucet:APT"]
+script = '''
+ALICE=$(cat keys/devnet/keys/alice/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+
+k=1000
+M=$(($k* $k))
+B=$(($M* $k))
+coin_x_amount=$((1 * $M)) ;: max 1e6
+
+aptos account fund-with-faucet --account ${ALICE} --amount ${coin_x_amount}
+'''
+
+[tasks."alice:faucet:BTC"]
+script = '''
+umi_aggr=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.account | sed -e 's/"//g')
+ADMIN_PRIVATE=$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.private_key | sed -e 's/"//g')
+ALICE_PRIVATE=$(cat keys/devnet/keys/alice/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+
+UMI_COINS=${MOD_ADDRESS}::coin_list
+HIPPO_COINS=0x498d8926f16eb9ca90cab1b3a26aa6f97a080b3fcbe6e83ae150b7243a00fb68::devnet_coins
+
+COIN_X=${HIPPO_COINS}::DevnetBTC
+echo $COIN_X
+
+k=1000
+M=$(($k* $k))
+B=$(($M* $k))
+coin_x_amount=$((1 * $M)) ;: max 1e6
+
+aptos move run \
+  --url https://testnet.aptoslabs.com \
+  --private-key ${ALICE_PRIVATE} \
+  --function-id ${HIPPO_COINS}::mint_to_wallet \
+  --type-args ${COIN_X} \
+  --args u64:100
+'''
+
+[tasks."alice:faucet:USDI"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.account | sed -e 's/"//g')
+ADMIN_PRIVATE=$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.private_key | sed -e 's/"//g')
+UMI_COINS=${umi_pool}::coin_list
+
+COIN_X=${UMI_COINS}::USDI
+
+k=1000
+M=$(($k* $k))
+B=$(($M* $k))
+coin_x_amount=$((1 * $M)) ;: max 1e6
+
+aptos move run \
+  --url https://testnet.aptoslabs.com \
+  --private-key ${ADMIN_PRIVATE} \
+  --function-id ${UMI_COINS}::mint_to_wallet \
+  --type-args ${COIN_X} \
+  --args u64:100
+'''
+
+[tasks."alice:faucet:RED"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.account | sed -e 's/"//g')
+ADMIN_PRIVATE=$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.private_key | sed -e 's/"//g')
+UMI_COINS=${umi_pool}::coin_list
+
+COIN_X=${UMI_COINS}::RED
+
+k=1000
+M=$(($k* $k))
+B=$(($M* $k))
+coin_x_amount=$((1 * $M)) ;: max 1e6
+
+aptos move run \
+  --url https://testnet.aptoslabs.com \
+  --private-key ${ADMIN_PRIVATE} \
+  --function-id ${UMI_COINS}::mint_to_wallet \
+  --type-args ${COIN_X} \
+  --args u64:100
+'''
+
+[tasks."alice:register:BTC"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.account | sed -e 's/"//g')
+ALICE_ADDRESS=$(cat keys/devnet/keys/alice/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+ALICE_PRIVATE=$(cat keys/devnet/keys/alice/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+MOD_ADDRESS=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+umi_coins=${umi_pool}::coin_list
+HIPPO_COINS=0x498d8926f16eb9ca90cab1b3a26aa6f97a080b3fcbe6e83ae150b7243a00fb68::devnet_coins
+
+COIN_X=${HIPPO_COINS}::DevnetBTC
+echo $COIN_X
+
+aptos move run \
+  --url https://testnet.aptoslabs.com \
+  --private-key ${ALICE_PRIVATE} \
+  --function-id 0x1::managed_coin::register \
+  --type-args ${COIN_X} \
+'''
+
+[tasks."alice:register:USDI"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.account | sed -e 's/"//g')
+ALICE_ADDRESS=$(cat keys/devnet/keys/alice/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+ALICE_PRIVATE=$(cat keys/devnet/keys/alice/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+MOD_ADDRESS=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+umi_coins=${umi_pool}::coin_list
+
+COIN_X=${umi_coins}::USDI
+echo $COIN_X
+
+aptos move run \
+  --url https://testnet.aptoslabs.com \
+  --private-key ${ALICE_PRIVATE} \
+  --function-id 0x1::managed_coin::register \
+  --type-args ${COIN_X} \
+'''
+
+[tasks."alice:swap:RED/USDI"]
+script = '''
+ALICE=$(cat keys/devnet/keys/alice/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+ALICE_PRIVATEKEY=$(cat keys/devnet/keys/alice/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.account | sed -e 's/"//g')
+umi_coins=${umi_pool}::coin_list
+HIPPO_COINS=0x498d8926f16eb9ca90cab1b3a26aa6f97a080b3fcbe6e83ae150b7243a00fb68::devnet_coins
+
+COIN_X=${umi_coins}::RED
+COIN_Y=${umi_coins}::USDI
+
+amount_in=100
+
+aptos move run \
+  --url https://testnet.aptoslabs.com \
+  --private-key ${ALICE_PRIVATEKEY} \
+  --function-id ${umi_pool}::pool::swap_script \
+  --type-args ${COIN_X} ${COIN_Y} \
+  --args u64:${amount_in}
+'''
+
+[tasks."alice:swap:BTC/USDI"]
+script = '''
+ALICE=$(cat keys/devnet/keys/alice/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+ALICE_PRIVATEKEY=$(cat keys/devnet/keys/alice/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.account | sed -e 's/"//g')
+umi_coins=${umi_pool}::coin_list
+HIPPO_COINS=0x498d8926f16eb9ca90cab1b3a26aa6f97a080b3fcbe6e83ae150b7243a00fb68::devnet_coins
+
+COIN_X=${HIPPO_COINS}::DevnetBTC
+COIN_Y=${umi_coins}::USDI
+
+amount_in=100
+
+aptos move run \
+  --url https://testnet.aptoslabs.com \
+  --private-key ${ALICE_PRIVATEKEY} \
+  --function-id ${umi_pool}::pool::swap_script \
+  --type-args ${COIN_X} ${COIN_Y} \
+  --args u64:${amount_in}
+'''
+
+[tasks."alice:swap:USDI/BTC"]
+script = '''
+ALICE=$(cat keys/devnet/keys/alice/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+ALICE_PRIVATEKEY=$(cat keys/devnet/keys/alice/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.account | sed -e 's/"//g')
+umi_coins=${umi_pool}::coin_list
+HIPPO_COINS=0x498d8926f16eb9ca90cab1b3a26aa6f97a080b3fcbe6e83ae150b7243a00fb68::devnet_coins
+
+COIN_X=${umi_coins}::USDI
+COIN_Y=${HIPPO_COINS}::DevnetBTC
+
+amount_in=90
+
+aptos move run \
+  --url https://testnet.aptoslabs.com \
+  --private-key ${ALICE_PRIVATEKEY} \
+  --function-id ${umi_pool}::pool::swap_script \
+  --type-args ${COIN_X} ${COIN_Y} \
+  --args u64:${amount_in}
+'''
+
+[tasks."alice:swap:BTC/ETH"]
+script = '''
+ALICE=$(cat keys/devnet/keys/alice/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+ALICE_PRIVATEKEY=$(cat keys/devnet/keys/alice/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.testnet_dev.account | sed -e 's/"//g')
+umi_coins=${umi_pool}::coin_list
+HIPPO_COINS=0x498d8926f16eb9ca90cab1b3a26aa6f97a080b3fcbe6e83ae150b7243a00fb68::devnet_coins
+
+COIN_X=${HIPPO_COINS}::DevnetBTC
+COIN_Y=${umi_coins}::ETH
+
+amount_in=80
+
+aptos move run \
+  --url https://testnet.aptoslabs.com \
+  --private-key ${ALICE_PRIVATEKEY} \
+  --function-id ${umi_pool}::pool::swap_script \
+  --type-args ${COIN_X} ${COIN_Y} \
+  --args u64:${amount_in}
+'''

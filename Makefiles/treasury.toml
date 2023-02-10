@@ -1,0 +1,346 @@
+[tasks."treasury:renew"]
+script = '''
+rm -rf keys/devnet/keys/treasury
+aptos genesis generate-keys --output-dir keys/devnet/keys/treasury
+
+UMI_TREASURY=$(cat keys/devnet/keys/treasury/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+
+echo umi_treasury = \"${UMI_TREASURY}\" >> Move.toml
+aptos account fund-with-faucet --account ${UMI_TREASURY}
+'''
+
+[tasks."treasury:faucet:APT"]
+script = '''
+UMI_TREASURY=$(cat keys/devnet/keys/treasury/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+
+k=1000
+M=$(($k* $k))
+B=$(($M* $k))
+coin_x_amount=$((1 * $M)) ;: max 1e6
+
+aptos account fund-with-faucet --account ${UMI_TREASURY} --amount ${coin_x_amount}
+'''
+
+[tasks."treasury:register:RED"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+UMI_TREASURY=$(cat keys/devnet/keys/treasury/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+TREASURY_PRIVATE=$(cat keys/devnet/keys/treasury/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+
+COIN_TYPE=${umi_pool}::coin_list::RED
+
+aptos move run \
+  --private-key ${TREASURY_PRIVATE} \
+  --function-id 0x1::managed_coin::register \
+  --type-args ${COIN_TYPE} \
+'''
+
+[tasks."treasury:register:BLUE"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+UMI_TREASURY=$(cat keys/devnet/keys/treasury/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+TREASURY_PRIVATE=$(cat keys/devnet/keys/treasury/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+
+COIN_TYPE=${umi_pool}::coin_list::BLUE
+
+aptos move run \
+  --private-key ${TREASURY_PRIVATE} \
+  --function-id 0x1::managed_coin::register \
+  --type-args ${COIN_TYPE} \
+'''
+
+[tasks."treasury:register:USDI"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+UMI_TREASURY=$(cat keys/devnet/keys/treasury/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+TREASURY_PRIVATE=$(cat keys/devnet/keys/treasury/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+
+COIN_TYPE=${umi_pool}::coin_list::USDI
+
+aptos move run \
+  --private-key ${TREASURY_PRIVATE} \
+  --function-id 0x1::managed_coin::register \
+  --type-args ${COIN_TYPE} \
+'''
+
+[tasks."treasury:register:cUSDI"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+UMI_TREASURY=$(cat keys/devnet/keys/treasury/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+TREASURY_PRIVATE=$(cat keys/devnet/keys/treasury/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+
+COIN_TYPE=${umi_pool}::coin_list::CUSDI
+
+aptos move run \
+  --private-key ${TREASURY_PRIVATE} \
+  --function-id 0x1::managed_coin::register \
+  --type-args ${COIN_TYPE} \
+'''
+
+[tasks."treasury:faucet:cUSDI"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+TREASURY=$(cat keys/devnet/keys/treasury/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+TREASURY_PRIVATE=$(cat keys/devnet/keys/treasury/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+
+COIN_X=${umi_pool}::coin_list::CUSDI
+
+k=1000
+M=$(($k* $k))
+B=$(($M* $k))
+coin_x_amount=$((1 * $B * $M))
+
+aptos move run \
+  --function-id 0x1::managed_coin::mint \
+  --type-args ${COIN_X} \
+  --args address:${TREASURY} u64:${coin_x_amount}
+'''
+
+[tasks."treasury:faucet:RED"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+TREASURY=$(cat keys/devnet/keys/treasury/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+TREASURY_PRIVATE=$(cat keys/devnet/keys/treasury/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+
+COIN_X=${umi_pool}::coin_list::USDI
+
+coin_x_amount=1000000000 ;: 1e9
+
+aptos move run \
+  --function-id 0x1::managed_coin::mint \
+  --type-args ${COIN_X} \
+  --args address:${TREASURY} u64:${coin_x_amount}
+'''
+
+[tasks."treasury:faucet:RED/BLUE"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+TREASURY=$(cat keys/devnet/keys/treasury/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+
+COIN_X=${umi_pool}::coin_list::RED
+COIN_Y=${umi_pool}::coin_list::BLUE
+
+k=1000
+M=$(($k* $k))
+B=$(($M* $k))
+coin_x_amount=$((100 * $k * $M)) ;: 100e3 * 1e6
+coin_y_amount=$((100 * $k * $B)) ;: 100e3 * 1e9
+
+aptos move run \
+  --function-id 0x1::managed_coin::mint \
+  --type-args ${COIN_X} \
+  --args address:${TREASURY} u64:${coin_x_amount}
+
+aptos move run \
+  --function-id 0x1::managed_coin::mint \
+  --type-args ${COIN_Y} \
+  --args address:${TREASURY} u64:${coin_y_amount}
+'''
+
+[tasks."treasury:faucet:USDI"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+TREASURY=$(cat keys/devnet/keys/treasury/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+TREASURY_PRIVATE=$(cat keys/devnet/keys/treasury/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+
+COIN_X=${umi_pool}::coin_list::USDI
+
+k=1000
+M=$(($k* $k))
+B=$(($M* $k))
+
+coin_x_amount=$((100 * $k * $M))
+
+aptos move run \
+  --function-id 0x1::managed_coin::mint \
+  --type-args ${COIN_X} \
+  --args address:${TREASURY} u64:${coin_x_amount}
+'''
+
+[tasks."treasury:faucet:USDT"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+TREASURY=$(cat keys/devnet/keys/treasury/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+TREASURY_PRIVATE=$(cat keys/devnet/keys/treasury/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+
+aptos move run \
+  --private-key ${TREASURY_PRIVATE} \
+  --function-id 0x43417434fd869edee76cca2a4d2301e528a1551b1d719b75c350c3c97d15b8b9::faucet::request \
+  --type-args 0x43417434fd869edee76cca2a4d2301e528a1551b1d719b75c350c3c97d15b8b9::coins::USDT \
+  --args address:43417434fd869edee76cca2a4d2301e528a1551b1d719b75c350c3c97d15b8b9
+'''
+
+[tasks."treasury:faucet:BTC"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+TREASURY=$(cat keys/devnet/keys/treasury/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+TREASURY_PRIVATE=$(cat keys/devnet/keys/treasury/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+
+aptos move run \
+  --private-key ${TREASURY_PRIVATE} \
+  --function-id 0x43417434fd869edee76cca2a4d2301e528a1551b1d719b75c350c3c97d15b8b9::faucet::request \
+  --type-args 0x43417434fd869edee76cca2a4d2301e528a1551b1d719b75c350c3c97d15b8b9::coins::BTC \
+  --args address:43417434fd869edee76cca2a4d2301e528a1551b1d719b75c350c3c97d15b8b9
+'''
+
+[tasks."treasury:faucet:APT/USDI"]
+dependencies = [
+  "treasury:faucet:APT",
+  "treasury:faucet:USDI",
+]
+
+[tasks."treasury:add:USDI/cUSDI"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+TREASURY=$(cat keys/devnet/keys/treasury/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+TREASURY_PRIVATE=$(cat keys/devnet/keys/treasury/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+
+COIN_X=${umi_pool}::coin_list::USDI
+COIN_Y=${umi_pool}::coin_list::CUSDI
+
+k=1000
+M=$(($k* $k))
+B=$(($M* $k))
+coin_x_amount=$((1 * $k * $M))
+coin_y_amount=$((1 * $B * $M))
+
+aptos move run \
+  --private-key ${TREASURY_PRIVATE} \
+  --function-id ${umi_pool}::pool::add_liquidity \
+  --type-args ${COIN_X} ${COIN_Y} \
+  --args u64:${coin_x_amount} u64:${coin_y_amount}
+'''
+
+[tasks."treasury:add:USDI/BTC"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+TREASURY=$(cat keys/devnet/keys/treasury/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+TREASURY_PRIVATE=$(cat keys/devnet/keys/treasury/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+
+COIN_X=${umi_pool}::coin_list::USDI
+COIN_Y=0x43417434fd869edee76cca2a4d2301e528a1551b1d719b75c350c3c97d15b8b9::coins::BTC
+resource=0x1::coin::CoinStore%3C${COIN_Y}%3E
+
+k=1000
+M=$(($k* $k))
+B=$(($M* $k))
+coin_x_amount=$((10 * $k * $M))
+coin_y_amount=$(curl https://fullnode.devnet.aptoslabs.com/v1/accounts/0x${TREASURY}/resource/${resource} \
+  | jq .data.coin.value | sed -e 's/"//g')
+
+aptos move run \
+  --private-key ${TREASURY_PRIVATE} \
+  --function-id ${umi_pool}::pool::add_liquidity \
+  --type-args ${COIN_X} ${COIN_Y} \
+  --args u64:${coin_x_amount} u64:${coin_y_amount}
+'''
+
+[tasks."treasury:add:USDI/USDT"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+TREASURY=$(cat keys/devnet/keys/treasury/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+TREASURY_PRIVATE=$(cat keys/devnet/keys/treasury/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+
+COIN_X=${umi_pool}::coin_list::USDI
+COIN_Y=0x43417434fd869edee76cca2a4d2301e528a1551b1d719b75c350c3c97d15b8b9::coins::USDT
+resource=0x1::coin::CoinStore%3C${COIN_Y}%3E
+
+k=1000
+M=$(($k* $k))
+B=$(($M* $k))
+coin_x_amount=$((10 * $k * $M))
+coin_y_amount=$(curl https://fullnode.devnet.aptoslabs.com/v1/accounts/0x${TREASURY}/resource/${resource} \
+  | jq .data.coin.value | sed -e 's/"//g')
+
+aptos move run \
+  --private-key ${TREASURY_PRIVATE} \
+  --function-id ${umi_pool}::pool::add_liquidity \
+  --type-args ${COIN_X} ${COIN_Y} \
+  --args u64:${coin_x_amount} u64:${coin_y_amount}
+'''
+
+[tasks."treasury:add:APT/USDI"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+TREASURY=$(cat keys/devnet/keys/treasury/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+TREASURY_PRIVATE=$(cat keys/devnet/keys/treasury/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+
+COIN_X=0x1::aptos_coin::AptosCoin
+COIN_Y=${umi_pool}::coin_list::USDI
+
+k=1000
+M=$(($k* $k))
+B=$(($M* $k))
+coin_x_amount=$((1 * $M))
+coin_y_amount=$((100 * $M))
+
+aptos move run \
+  --private-key ${TREASURY_PRIVATE} \
+  --function-id ${umi_pool}::pool::add_liquidity \
+  --type-args ${COIN_X} ${COIN_Y} \
+  --args u64:${coin_x_amount} u64:${coin_y_amount}
+'''
+
+[tasks."treasury:remove:APT/USDI"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+TREASURY=$(cat keys/devnet/keys/treasury/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+TREASURY_PRIVATE=$(cat keys/devnet/keys/treasury/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+
+COIN_X=0x1::aptos_coin::AptosCoin
+COIN_Y=${umi_pool}::coin_list::USDI
+
+k=1000
+M=$(($k* $k))
+B=$(($M* $k))
+coin_x_amount=0
+coin_y_amount=$((100 * $M))
+
+aptos move run \
+  --private-key ${TREASURY_PRIVATE} \
+  --function-id ${umi_pool}::pool::remove_liquidity \
+  --type-args ${COIN_X} ${COIN_Y} \
+  --args u64:${coin_x_amount} u64:${coin_y_amount}
+'''
+
+[tasks."treasury:add:RED/BLUE"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+TREASURY=$(cat keys/devnet/keys/treasury/public-keys.yaml | yq -o=json | jq .account_address | sed -e 's/"//g')
+TREASURY_PRIVATE=$(cat keys/devnet/keys/treasury/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+
+COIN_X=${umi_pool}::coin_list::RED
+COIN_Y=${umi_pool}::coin_list::BLUE
+
+k=1000
+M=$(($k* $k))
+B=$(($M* $k))
+coin_x_amount=$((100 * $k * $M)) ;: 100e3 * 1e6
+coin_y_amount=$((100 * $k * $B)) ;: 100e3 * 1e9
+
+aptos move run \
+  --private-key ${TREASURY_PRIVATE} \
+  --function-id ${umi_pool}::pool::add_liquidity \
+  --type-args ${COIN_X} ${COIN_Y} \
+  --args u64:${coin_x_amount} u64:${coin_y_amount}
+'''
+
+[tasks."treasury:swap_xy:RED/BLUE"]
+script = '''
+umi_pool=0x$(tail -n +2 .aptos/config.yaml | yq -o=json | jq .profiles.default.account | sed -e 's/"//g')
+ALICE_PRIVATE=$(cat keys/devnet/keys/alice/private-keys.yaml | yq -o=json | jq .account_private_key | sed -e 's/"//g')
+
+COIN_X=${umi_pool}::coin_list::RED
+COIN_Y=${umi_pool}::coin_list::BLUE
+
+amount_in=100
+min_amount_out=10
+coin_x_decimals=6
+coin_y_decimals=9
+
+aptos move run \
+  --private-key ${ALICE_PRIVATE} \
+  --function-id ${umi_pool}::pool::swap_x_to_y_dec \
+  --type-args ${COIN_X} ${COIN_Y} \
+  --args u64:${amount_in} u64:${min_amount_out} u8:${coin_x_decimals} u8:${coin_y_decimals}
+'''

@@ -1,0 +1,8 @@
+---
+profiles:
+  testnet_dev:
+    private_key: "0x5db2df40deb2b3ad7303d6eb3681f776b83e8d96c302e62c231155bca85b44ef"
+    public_key: "0x304671a7d79794ad126bb1a48aca0f119e34cc6eb975fbfc9ff2320fa5df007d"
+    account: dd65b4a704765655e55c6a0229f84014f35a81c6ea4110863ac42ef7c8d76863
+    rest_url: "https://testnet.aptoslabs.com/"
+    faucet_url: "https://faucet.devnet.aptoslabs.com/"
